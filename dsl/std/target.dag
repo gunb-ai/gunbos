@@ -1,0 +1,29 @@
+// dsl/std/target.dag — universal-OS deployment target (gunbos Slice-0)
+//
+// Scope: gunbos ground truth for the fleet deployment target. ONE consumer module
+// that imports gunbc ArchitectureProfile + DeploymentTarget and grounds the operator
+// fleet reality (aarch64 Linux, srv1/srv2 Ampere Altra Max).
+//
+// 🟡 consumer:gunbc-architecture-profile — resolves on gunbc #4889 (aapcs64 PR) merge;
+//    ctrl pin needs a second bump to the gunbc main SHA that includes #4889.
+// 🟡 consumer:dsl-rooted-claim-run-gate — claim-run not enrolled until swift-stag dsl
+//    corpus gate lands (same gate as gunbc extdeps/runtime witnesses).
+//
+// v2-green: std.architecture_profile uses Int/Bool/List/records; no named-Option import.
+
+module std.target
+
+import std.architecture_profile { DeploymentTarget, TargetArchitecture, Endianness }
+import extdeps.runtime.architecture.aarch64_linux { aarch64_linux_deployment_target }
+import std.types { Bool }
+
+// gunbos fleet ground truth: aarch64 Linux (srv1/srv2 Ampere Altra Max, Ubuntu 24.04 Noble).
+// Intentional at the gunbos layer — gunbc extdeps holds the cited spec atoms; gunbos owns
+// the OS business logic that operates on them.
+data fleet_target: DeploymentTarget = aarch64_linux_deployment_target
+
+// Witnesses — claim-run gated on gunbc #4889 merge + dsl corpus gate (see 🟡 above).
+fn witness_fleet_is_aarch64() -> Bool       { fleet_target.profile.architecture == Aarch64 }
+fn witness_fleet_is_64bit() -> Bool         { fleet_target.profile.word_width_bits == 64 }
+fn witness_fleet_is_little_endian() -> Bool { fleet_target.profile.endianness == LittleEndian }
+fn witness_fleet_stack_grows_down() -> Bool { fleet_target.profile.stack_layout.grows_down == true }
