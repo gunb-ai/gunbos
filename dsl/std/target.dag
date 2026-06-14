@@ -4,8 +4,11 @@
 // that imports gunbc ArchitectureProfile + DeploymentTarget and grounds the operator
 // fleet reality (aarch64 Linux, srv1/srv2 Ampere Altra Max).
 //
-// 🟡 consumer:gunbc-architecture-profile — resolves on gunbc #4889 (aapcs64 PR) merge;
-//    ctrl pin needs a second bump to the gunbc main SHA that includes #4889.
+// 🟡 consumer:gunbc-architecture-profile — resolves in two steps:
+//    (a) ctrl pin bump when gunbc #4882 (sharp-lark-26) merges — lands ArchitectureProfile +
+//        DeploymentTarget in std.architecture_profile;
+//    (b) ctrl pin bump when gunbc #4889 (keen-fox-233) merges — lands aarch64_linux inhabitant
+//        (aarch64_linux_deployment_target used by fleet_target below).
 // 🟡 consumer:dsl-rooted-claim-run-gate — claim-run not enrolled until swift-stag dsl
 //    corpus gate lands (same gate as gunbc extdeps/runtime witnesses).
 //
@@ -15,6 +18,10 @@ module std.target
 
 import std.architecture_profile { DeploymentTarget, TargetArchitecture, Endianness }
 import extdeps.runtime.architecture.aarch64_linux { aarch64_linux_deployment_target }
+// 🟡 consumer:x86-64-extdep — x86_64_linux_deployment_target pending gunbc extdeps merge
+//    (expected same PR family as gunbc #4889 keen-fox-233).
+import extdeps.runtime.architecture.x86_64_linux { x86_64_linux_deployment_target }
+import std.cross_arch { CrossArchSurface, generate_cross_arch_surface }
 import std.types { Bool }
 
 // gunbos fleet ground truth: aarch64 Linux (srv1/srv2 Ampere Altra Max, Ubuntu 24.04 Noble).
@@ -27,3 +34,9 @@ fn witness_fleet_is_aarch64() -> Bool       { fleet_target.profile.architecture 
 fn witness_fleet_is_64bit() -> Bool         { fleet_target.profile.word_width_bits == 64 }
 fn witness_fleet_is_little_endian() -> Bool { fleet_target.profile.endianness == LittleEndian }
 fn witness_fleet_stack_grows_down() -> Bool { fleet_target.profile.stack_layout.grows_down == true }
+
+// Fleet cross-arch surface: running an x86_64 Linux binary on the fleet (aarch64 host).
+// Generated entirely from the two DeploymentTarget data rows — no hardcoded remapping.
+// 🟡 consumer:x86-64-extdep — x86_64_linux_deployment_target + .invocation field both pending.
+data x86_on_fleet_surface: CrossArchSurface =
+  generate_cross_arch_surface(host: fleet_target, guest: x86_64_linux_deployment_target)

@@ -1,0 +1,25 @@
+// dsl/extdeps/translators/fex_elf.dag — FEX-ELF binary translator extdep
+//
+// FEX-ELF (Fast x86 Emulation) is an x86/x86_64 userspace-ABI translator that
+// runs on aarch64 Linux hosts. The OS calls a thin ELF interpreter shim that
+// traps guest syscalls and remaps numbers + register layout to the host ABI.
+//
+// Citation: https://github.com/FEX-Emu/FEX
+// Supported guest:  x86_64 Linux (also x86-32 via compat layer)
+// Required host:    aarch64 Linux
+//
+// This data row is consumed by ValidatedCrossArchRoute to produce a full
+// ExecutionRoute declaration for the fleet (see std.target.x86_on_fleet_surface).
+//
+// 🟡 consumer:cross-arch-std — std.cross_arch.KnownTranslator resolves when
+//    gunbc #4882 (sharp-lark-26) merges and the gunbos pin is updated.
+
+module extdeps.translators.fex_elf
+
+import std.cross_arch { KnownTranslator }
+
+data fex_elf_translator: KnownTranslator = KnownTranslator {
+  name:          "FEX-ELF",
+  citation:      "https://github.com/FEX-Emu/FEX",
+  full_coverage: true,
+}
